@@ -17,6 +17,14 @@ standard photometric color index.
 The prototype reads the first image HDU containing data. It does not debayer
 raw sensor data, register channels, or combine separate monochrome exposures.
 
+Before processing, the page reads at most 32 FITS header blocks (about 90 KiB)
+to display primary-image dimensions and flag known size-limit violations. If the
+image is in an extension HDU or its primary header cannot be identified, the
+dimensions are checked by Astropy during analysis. Full FITS validation remains
+in Python. Displayed RGB-array memory is `width × height × 3 × 8` bytes, not total
+working memory or a forecast of browser capacity. Any device-memory report is
+rounded installed RAM; the page does not measure free RAM or a per-page limit.
+
 ## Calculations
 
 1. Detect stars in the RGB mean after Gaussian smoothing with sigma 1 pixel.

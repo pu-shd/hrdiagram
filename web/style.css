@@ -12,6 +12,13 @@ label { display: block; font-weight: 600; margin: 20px 0 10px; }
 input { display: block; max-width: 100%; font: inherit; }
 .muted, .hint, footer { color: #536b82; }
 .hint, footer { font-size: .88rem; }
+.resource-note { margin-top: 20px; padding: 18px 20px; border: 1px solid #d7e1ea; border-radius: 8px; background: #f5f8fb; font-size: .9rem; }
+.resource-note h3 { margin: 0; font-size: 1rem; }
+.resource-note p { margin: 10px 0; }
+.resource-note p:last-child { margin-bottom: 0; }
+.resource-note dt { margin-top: 10px; font-weight: 600; }
+.resource-note dd { margin: 4px 0 0; line-height: 1.6; }
+.over-limit { color: #9a2323; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; align-items: center; }
 button, .download { display: inline-block; border: 1px solid #174f77; border-radius: 7px; padding: 11px 16px; background: #174f77; color: white; font: inherit; text-decoration: none; cursor: pointer; }
 button:disabled { opacity: .45; cursor: wait; }

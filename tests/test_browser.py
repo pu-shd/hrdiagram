@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 from playwright.sync_api import sync_playwright
+from astropy.io import fits
 
 from test_analysis import analyze, as_fits, synthetic
 
@@ -122,4 +123,109 @@ def test_browser_workflow_and_offline_measurements(static_url, tmp_path, engine)
         assert page.locator("#results").is_hidden()
         assert not failures, failures
         context.close()
+        browser.close()
+
+
+@pytest.mark.parametrize("reported_memory", [8, None])
+def test_image_resources_show_file_dimensions_and_honest_memory_report(static_url, reported_memory):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        context = browser.new_context(locale="en-US")
+        context.add_init_script(
+            "Object.defineProperty(navigator, 'deviceMemory', {get: () => "
+            + json.dumps(reported_memory)
+            + "});"
+        )
+        context.route(
+            "**/worker.js*",
+            lambda route: route.fulfill(
+                content_type="application/javascript", body="self.postMessage({type:'ready'});"
+            ),
+        )
+        page = context.new_page()
+        page.goto(static_url)
+        assert page.locator("#image-resources").count() == 1
+        page.locator("#image").set_input_files(
+            {
+                "name": "example.fit",
+                "mimeType": "application/octet-stream",
+                "buffer": as_fits(synthetic()).getvalue(),
+            }
+        )
+        page.wait_for_function(
+            'document.querySelector("#image-resources").textContent.includes("160 × 160")'
+        )
+        note = page.locator("#image-resources").inner_text()
+        assert "0.03 megapixels" in note
+        assert "RGB array alone: 0.6 MiB" in note
+        memory = page.locator("#browser-memory").inner_text()
+        assert ("about 8 GiB" if reported_memory else "not reported by this browser") in memory
+        assert "available memory" in page.locator("#resource-note").inner_text()
+        page.locator("#image").set_input_files([])
+        assert "Choose an image" in page.locator("#image-resources").inner_text()
+        browser.close()
+
+
+def test_image_over_pixel_limit_is_explained_before_processing(static_url):
+    header = fits.Header()
+    for key, value in (
+        ("SIMPLE", True),
+        ("BITPIX", -32),
+        ("NAXIS", 3),
+        ("NAXIS1", 4000),
+        ("NAXIS2", 4000),
+        ("NAXIS3", 3),
+    ):
+        header[key] = value
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        context = browser.new_context(locale="en-US")
+        context.route(
+            "**/worker.js*",
+            lambda route: route.fulfill(
+                content_type="application/javascript", body="self.postMessage({type:'ready'});"
+            ),
+        )
+        page = context.new_page()
+        page.goto(static_url)
+        assert page.locator("#image-resources").count() == 1
+        page.locator("#image").set_input_files(
+            {
+                "name": "large.fit",
+                "mimeType": "application/octet-stream",
+                "buffer": header.tostring().encode("ascii"),
+            }
+        )
+        page.wait_for_function(
+            'document.querySelector("#image-resources").textContent.includes("Exceeds")'
+        )
+        assert "12-megapixel limit" in page.locator("#image-resources").inner_text()
+        assert page.locator("#generate").is_disabled()
+        browser.close()
+
+
+def test_image_over_file_limit_is_rejected_without_reading_image_data(static_url, tmp_path):
+    image = tmp_path / "large.fit"
+    with image.open("wb") as output:
+        output.truncate(161 * 1024**2)
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        context = browser.new_context()
+        context.route(
+            "**/worker.js*",
+            lambda route: route.fulfill(
+                content_type="application/javascript", body="self.postMessage({type:'ready'});"
+            ),
+        )
+        context.add_init_script(
+            "Blob.prototype.arrayBuffer = () => { throw new Error('File must not be read'); };"
+        )
+        page = context.new_page()
+        failures = []
+        page.on("pageerror", lambda error: failures.append(str(error)))
+        page.goto(static_url)
+        page.locator("#image").set_input_files(image)
+        assert "160-MiB file limit" in page.locator("#image-resources").inner_text()
+        assert page.locator("#generate").is_disabled()
+        assert not failures
         browser.close()

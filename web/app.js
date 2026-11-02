@@ -14,6 +14,12 @@
   const error = element("error");
   const results = element("results");
   const loadDetails = element("load-details");
+  const imageResources = element("image-resources");
+  const maxFileBytes = 160 * 1024 * 1024;
+  const maxPixels = 12_000_000;
+  let checkingImage = false;
+  let imageWithinLimits = false;
+  let selectionVersion = 0;
   let ready = false;
   let busy = false;
   /** @type {Worker} */
@@ -23,6 +29,91 @@
   let stem = "stars";
   let job = 0;
 
+  /** @param {number} bytes */
+  function mib(bytes) {
+    return (bytes / 1024 ** 2).toLocaleString(undefined, { maximumFractionDigits: 1 });
+  }
+  /**
+   * Read only a bounded primary FITS header for the size note. Astropy remains
+   * responsible for full validation and for images in extension HDUs.
+   * @param {ArrayBuffer} bytes
+   * @returns {{width: number, height: number} | null}
+   */
+  function primaryDimensions(bytes) {
+    const text = new TextDecoder("ascii").decode(bytes);
+    if (!text.startsWith("SIMPLE  =")) return null;
+    /** @type {Map<string, number>} */
+    const values = new Map();
+    let ended = false;
+    for (let offset = 0; offset + 80 <= text.length; offset += 80) {
+      const card = text.slice(offset, offset + 80);
+      const key = card.slice(0, 8).trim();
+      if (key === "END") { ended = true; break; }
+      if (!["NAXIS", "NAXIS1", "NAXIS2", "NAXIS3"].includes(key) || card[8] !== "=") continue;
+      const value = card.slice(10).split("/")[0].trim();
+      if (!/^\+?\d+$/.test(value)) return null;
+      values.set(key, Number(value));
+    }
+    const width = values.get("NAXIS1");
+    const height = values.get("NAXIS2");
+    if (!ended || values.get("NAXIS") !== 3 || values.get("NAXIS3") !== 3 || !width || !height ||
+        !Number.isSafeInteger(width) || !Number.isSafeInteger(height) || !Number.isSafeInteger(width * height)) return null;
+    return { width, height };
+  }
+  async function describeSelection() {
+    const version = ++selectionVersion;
+    const file = input.files?.[0];
+    imageResources.classList.remove("over-limit");
+    checkingImage = false;
+    imageWithinLimits = false;
+    if (!file) {
+      imageResources.textContent = "Choose an image to see its size and dimensions.";
+      update();
+      return;
+    }
+    const fileSize = `${mib(file.size)} MiB file`;
+    if (file.size > maxFileBytes) {
+      imageResources.textContent = `${fileSize}. Exceeds the 160-MiB file limit.`;
+      imageResources.classList.add("over-limit");
+      update();
+      return;
+    }
+    checkingImage = true;
+    imageWithinLimits = true;
+    imageResources.textContent = `${fileSize}. Checking image dimensions…`;
+    update();
+    try {
+      // Inspect at most 32 FITS header blocks (~90 KiB), never the whole image.
+      const bytes = await file.slice(0, 2880 * 32).arrayBuffer();
+      if (version !== selectionVersion) return;
+      const dimensions = primaryDimensions(bytes);
+      if (dimensions) {
+        const { width, height } = dimensions;
+        const pixels = width * height;
+        const megapixels = (pixels / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 });
+        const description = `${width.toLocaleString()} × ${height.toLocaleString()} pixels (${megapixels} megapixels) · ${fileSize}.`;
+        imageWithinLimits = pixels <= maxPixels;
+        imageResources.textContent = imageWithinLimits
+          ? `${description} RGB array alone: ${mib(pixels * 3 * 8)} MiB; processing needs additional memory.`
+          : `${description} Exceeds the 12-megapixel limit.`;
+        imageResources.classList.toggle("over-limit", !imageWithinLimits);
+      } else {
+        imageResources.textContent = `${fileSize}. Dimensions will be checked during analysis.`;
+      }
+    } catch {
+      if (version === selectionVersion) imageResources.textContent = `${fileSize}. Dimensions will be checked during analysis.`;
+    } finally {
+      if (version === selectionVersion) {
+        checkingImage = false;
+        update();
+      }
+    }
+  }
+  const deviceMemory = /** @type {Navigator & { deviceMemory?: number }} */ (navigator).deviceMemory;
+  element("browser-memory").textContent = typeof deviceMemory === "number" && Number.isFinite(deviceMemory) && deviceMemory > 0
+    ? `The browser reports about ${deviceMemory} GiB of device RAM (rounded). This is installed RAM, not free memory or a per-page allowance.`
+    : "Memory information is not reported by this browser.";
+
   function clearResults() {
     for (const url of urls) URL.revokeObjectURL(url);
     urls = [];
@@ -30,7 +121,7 @@
     /** @type {HTMLImageElement} */ (element("plot")).removeAttribute("src");
   }
   function update() {
-    generate.disabled = !ready || busy || !input.files?.length;
+    generate.disabled = !ready || busy || checkingImage || !imageWithinLimits || !input.files?.length;
     input.disabled = busy;
     cancel.hidden = !busy;
   }
@@ -93,14 +184,14 @@
   input.addEventListener("change", () => {
     clearResults();
     error.hidden = true;
-    update();
+    void describeSelection();
   });
   generate.addEventListener("click", async () => {
     const file = input.files?.[0];
-    if (!file || !ready || busy) return;
+    if (!file || !ready || busy || checkingImage || !imageWithinLimits) return;
     clearResults();
     error.hidden = true;
-    if (file.size > 160 * 1024 * 1024) {
+    if (file.size > maxFileBytes) {
       fail("Choose a FITS file smaller than 160 MiB.");
       return;
     }

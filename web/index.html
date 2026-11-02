@@ -6,8 +6,8 @@
   <meta name="color-scheme" content="light dark">
   <title>Stellar color–magnitude diagram</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css">
-  <script src="app.js?v=20261102b" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261102c">
+  <script src="app.js?v=20261102c" defer></script>
 </head>
 <body>
   <main>
@@ -22,7 +22,23 @@
         the saved pixel values should remain linear.</p>
       <label for="image">FITS image <span class="muted">(.fit, .fits, .fts)</span></label>
       <input id="image" type="file" accept=".fit,.fits,.fts">
-      <p class="hint">Up to 160 MiB and 12 megapixels. Your image is processed on this computer.</p>
+      <p class="hint">Your image is processed on this computer.</p>
+      <aside id="resource-note" class="resource-note" aria-labelledby="resource-heading">
+        <h3 id="resource-heading">Image size and browser memory</h3>
+        <p>Limits: <strong>12 megapixels</strong> (width × height) and <strong>160 MiB</strong> per
+          RGB FITS file. The tested M13 classroom example is 6.05 megapixels and about 69 MiB.</p>
+        <p>Processing can use hundreds of MiB or more, so an image within the limits may still
+          exceed your browser’s capacity. If processing fails, close unused tabs or try the
+          course example or a smaller crop.</p>
+        <dl>
+          <dt>Selected image</dt>
+          <dd id="image-resources" aria-live="polite">Choose an image to see its size and dimensions.</dd>
+          <dt>Browser memory report</dt>
+          <dd id="browser-memory"></dd>
+        </dl>
+        <p class="hint">This page cannot determine available memory. The first load downloads
+          about 47 MiB of analysis tools.</p>
+      </aside>
       <div class="actions">
         <button id="generate" disabled>Generate diagram</button>
         <button id="cancel" class="secondary" hidden>Cancel</button>

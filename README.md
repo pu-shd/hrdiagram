@@ -21,6 +21,14 @@ The axes are instrumental blue-minus-green color and shifted instrumental green
 magnitude. They are not calibrated temperature or absolute magnitude. See
 [the method and limitations](docs/method.md) before using the results in an assignment.
 
+The image-size note shows the selected FITS file's size and, when its primary RGB
+header can be read, its dimensions and the size of the floating-point RGB array
+alone. It flags files over 160 MiB or images over 12 megapixels before processing.
+Browser-reported device RAM is approximate installed memory; Safari and Firefox
+do not expose that report. The page cannot determine free memory or guarantee
+that an image below the limits will fit. Additional processing arrays and tools
+require more memory than the RGB array shown.
+
 ## Build and preview
 
 Development requires Docker and `docker-compose`; the deployed site requires
