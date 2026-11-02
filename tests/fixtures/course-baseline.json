@@ -1,0 +1,11 @@
+{
+  "width": 2750,
+  "height": 2200,
+  "detected": 5216,
+  "positive_rgb": 5008,
+  "plotted": 4906,
+  "rounded_six_decimal_sha256": {
+    "color": "77df07112f7e18db52b9b89bd7550904e85e1b6f936a149afd47c019606a7288",
+    "magnitude": "dc76a742e06390cebbb4f5fcd058d08e43256c4ed881935eb207336ad058ae0e"
+  }
+}

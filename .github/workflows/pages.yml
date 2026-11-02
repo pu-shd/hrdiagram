@@ -1,0 +1,48 @@
+name: Publish static app to GitHub Pages
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: read
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-compose-action@v1
+        with:
+          version: v2.39.4
+      - name: Provide docker-compose command
+        run: echo "$GITHUB_WORKSPACE/.github/bin" >> "$GITHUB_PATH"
+      - run: docker-compose build tools
+      - run: docker-compose run --rm -T tools python scripts/vendor.py
+      - run: docker-compose run --rm -T tools ruff check web/analysis.py scripts tests
+      - run: docker-compose run --rm -T tools ruff format --check web/analysis.py scripts tests
+      - run: docker-compose run --rm -T tools mypy
+      - run: docker-compose run --rm -T lint-js npm ci --ignore-scripts
+      - run: docker-compose run --rm -T lint-js npm run check
+      - run: docker-compose run --rm -T tools python -m pytest -v -s tests
+      - run: docker-compose run --rm -T tools python scripts/package.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/hr-diagram
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4

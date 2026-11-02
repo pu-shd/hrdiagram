@@ -1,0 +1,25 @@
+name: Checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-compose-action@v1
+        with:
+          version: v2.39.4
+      - name: Provide docker-compose command
+        run: echo "$GITHUB_WORKSPACE/.github/bin" >> "$GITHUB_PATH"
+      - run: docker-compose build tools
+      - run: docker-compose run --rm -T tools python scripts/vendor.py
+      - run: docker-compose run --rm -T tools ruff check web/analysis.py scripts tests
+      - run: docker-compose run --rm -T tools ruff format --check web/analysis.py scripts tests
+      - run: docker-compose run --rm -T tools mypy
+      - run: docker-compose run --rm -T lint-js npm ci --ignore-scripts
+      - run: docker-compose run --rm -T lint-js npm run check
+      - run: docker-compose run --rm -T tools python -m pytest -v -s tests

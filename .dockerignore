@@ -1,0 +1,17 @@
+.venv
+.git
+.env*
+node_modules
+__pycache__
+**/__pycache__
+artifacts
+build
+dist
+*.fit
+*.fits
+*.fts
+core
+core.*
+*.core
+*.dump
+*.dmp
