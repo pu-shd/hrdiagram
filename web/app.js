@@ -13,6 +13,7 @@
   const status = element("status");
   const error = element("error");
   const results = element("results");
+  const loadDetails = element("load-details");
   let ready = false;
   let busy = false;
   /** @type {Worker} */
@@ -46,8 +47,9 @@
     busy = false;
     retry.hidden = true;
     error.hidden = true;
+    loadDetails.hidden = true;
     status.textContent = "Loading the analysis tools… The first load can take a moment.";
-    worker = new Worker("worker.js", { type: "module" });
+    worker = new Worker("worker.js?v=20261102b", { type: "module" });
     worker.onerror = () => {
       worker.terminate();
       ready = false;
@@ -61,7 +63,9 @@
         update();
       } else if (data.type === "fatal") {
         ready = false;
-        fail("The analysis tools could not load. Check your connection and reload the tool.");
+        fail("The analysis tools could not load. Try Reload tool, or share Loading details with your instructor.");
+        element("load-error").textContent = `${data.stage || "Startup"}: ${String(data.message || "Unknown startup error").slice(0, 2000)}`;
+        loadDetails.hidden = false;
         retry.hidden = false;
       } else if (data.job === job && data.type === "error") {
         fail(data.message);

@@ -3,18 +3,21 @@
 const context = self;
 /** @type {any} */
 let runtime;
+let stage = "Python runtime";
 try {
   // Keep the runtime, wheels, and Python source on the same static origin.
-  const runtimeModule = new URL("./vendor/pyodide.mjs", import.meta.url).href;
+  const runtimeModule = new URL("./vendor/pyodide.mjs?v=0.29.3-1", import.meta.url).href;
   const { loadPyodide } = await import(runtimeModule);
   runtime = await loadPyodide({ indexURL: new URL("./vendor/", import.meta.url).href });
+  stage = "Scientific packages";
   await runtime.loadPackage(["numpy", "scipy", "matplotlib", "astropy"]);
+  stage = "Analysis code";
   const response = await fetch("analysis.py");
   if (!response.ok) throw new Error("Analysis source unavailable");
   runtime.runPython(await response.text());
   context.postMessage({ type: "ready" });
-} catch {
-  context.postMessage({ type: "fatal" });
+} catch (error) {
+  context.postMessage({ type: "fatal", stage, message: String(error) });
 }
 context.onmessage = async (/** @type {MessageEvent} */ { data }) => {
   if (data.type !== "analyze" || !runtime) return;

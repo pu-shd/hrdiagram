@@ -7,7 +7,7 @@
   <title>Stellar color–magnitude diagram</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
+  <script src="app.js?v=20261102b" defer></script>
 </head>
 <body>
   <main>
@@ -30,6 +30,10 @@
       </div>
       <p id="status" role="status" aria-live="polite">Loading the analysis tools…</p>
       <p id="error" role="alert" hidden></p>
+      <details id="load-details" hidden>
+        <summary>Loading details</summary>
+        <pre id="load-error"></pre>
+      </details>
     </section>
     <section id="results" class="panel" aria-labelledby="results-heading" hidden>
       <h2 id="results-heading">Your diagram</h2>

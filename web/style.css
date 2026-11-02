@@ -22,5 +22,6 @@ button:disabled { opacity: .45; cursor: wait; }
 footer { margin-top: 28px; }
 details { margin-top: 20px; }
 summary { cursor: pointer; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
 [hidden] { display: none !important; }
 @media (max-width: 600px) { main { padding: 28px 16px; } .panel { padding: 20px; } }
