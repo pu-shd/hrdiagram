@@ -13,7 +13,7 @@ input { display: block; max-width: 100%; font: inherit; }
 .muted, .hint, footer { color: #536b82; }
 .hint, footer { font-size: .88rem; }
 .resource-note { margin-top: 20px; padding: 18px 20px; border: 1px solid #d7e1ea; border-radius: 8px; background: #f5f8fb; font-size: .9rem; }
-.resource-note h3 { margin: 0; font-size: 1rem; }
+.resource-note > summary { font-size: 1rem; font-weight: 600; }
 .resource-note p { margin: 10px 0; }
 .resource-note p:last-child { margin-bottom: 0; }
 .resource-note dt { margin-top: 10px; font-weight: 600; }

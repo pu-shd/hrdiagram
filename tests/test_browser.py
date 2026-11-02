@@ -155,6 +155,8 @@ def test_image_resources_show_file_dimensions_and_honest_memory_report(static_ur
         page.wait_for_function(
             'document.querySelector("#image-resources").textContent.includes("160 × 160")'
         )
+        assert page.locator("#image-resources").is_hidden()
+        page.locator("#resource-heading").click()
         note = page.locator("#image-resources").inner_text()
         assert "0.03 megapixels" in note
         assert "RGB array alone: 0.6 MiB" in note
@@ -163,6 +165,34 @@ def test_image_resources_show_file_dimensions_and_honest_memory_report(static_ur
         assert "available memory" in page.locator("#resource-note").inner_text()
         page.locator("#image").set_input_files([])
         assert "Choose an image" in page.locator("#image-resources").inner_text()
+        browser.close()
+
+
+@pytest.mark.parametrize("engine", ["chromium", "firefox", "webkit"])
+def test_resource_note_starts_collapsed_and_supports_keyboard_disclosure(static_url, engine):
+    with sync_playwright() as playwright:
+        browser = getattr(playwright, engine).launch()
+        context = browser.new_context()
+        context.route(
+            "**/worker.js*",
+            lambda route: route.fulfill(
+                content_type="application/javascript", body="self.postMessage({type:'ready'});"
+            ),
+        )
+        page = context.new_page()
+        page.goto(static_url)
+        note = page.locator("#resource-note")
+        assert note.evaluate("element => element.tagName") == "DETAILS"
+        assert note.get_attribute("open") is None
+        assert page.locator("#image-resources").is_hidden()
+        summary = note.locator("summary")
+        assert summary.is_visible()
+        assert summary.inner_text() == "Image size and browser memory"
+        summary.focus()
+        summary.press("Enter")
+        assert page.locator("#image-resources").is_visible()
+        summary.press("Enter")
+        assert page.locator("#image-resources").is_hidden()
         browser.close()
 
 
@@ -200,6 +230,7 @@ def test_image_over_pixel_limit_is_explained_before_processing(static_url):
             'document.querySelector("#image-resources").textContent.includes("Exceeds")'
         )
         assert "12-megapixel limit" in page.locator("#image-resources").inner_text()
+        assert page.locator("#resource-note").get_attribute("open") is not None
         assert page.locator("#generate").is_disabled()
         browser.close()
 
@@ -226,6 +257,7 @@ def test_image_over_file_limit_is_rejected_without_reading_image_data(static_url
         page.goto(static_url)
         page.locator("#image").set_input_files(image)
         assert "160-MiB file limit" in page.locator("#image-resources").inner_text()
+        assert page.locator("#resource-note").get_attribute("open") is not None
         assert page.locator("#generate").is_disabled()
         assert not failures
         browser.close()

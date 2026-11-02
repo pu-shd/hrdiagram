@@ -6,8 +6,8 @@
   <meta name="color-scheme" content="light dark">
   <title>Stellar color–magnitude diagram</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=20261102c">
-  <script src="app.js?v=20261102c" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261102d">
+  <script src="app.js?v=20261102d" defer></script>
 </head>
 <body>
   <main>
@@ -23,8 +23,8 @@
       <label for="image">FITS image <span class="muted">(.fit, .fits, .fts)</span></label>
       <input id="image" type="file" accept=".fit,.fits,.fts">
       <p class="hint">Your image is processed on this computer.</p>
-      <aside id="resource-note" class="resource-note" aria-labelledby="resource-heading">
-        <h3 id="resource-heading">Image size and browser memory</h3>
+      <details id="resource-note" class="resource-note">
+        <summary id="resource-heading">Image size and browser memory</summary>
         <p>Limits: <strong>12 megapixels</strong> (width × height) and <strong>160 MiB</strong> per
           RGB FITS file. The tested M13 classroom example is 6.05 megapixels and about 69 MiB.</p>
         <p>Processing can use hundreds of MiB or more, so an image within the limits may still
@@ -38,7 +38,7 @@
         </dl>
         <p class="hint">This page cannot determine available memory. The first load downloads
           about 47 MiB of analysis tools.</p>
-      </aside>
+      </details>
       <div class="actions">
         <button id="generate" disabled>Generate diagram</button>
         <button id="cancel" class="secondary" hidden>Cancel</button>

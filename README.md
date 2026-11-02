@@ -28,6 +28,8 @@ Browser-reported device RAM is approximate installed memory; Safari and Firefox
 do not expose that report. The page cannot determine free memory or guarantee
 that an image below the limits will fit. Additional processing arrays and tools
 require more memory than the RGB array shown.
+The note starts collapsed; select its disclosure triangle to expand it. Selecting
+an image over a known size limit opens it automatically to explain the problem.
 
 ## Build and preview
 
