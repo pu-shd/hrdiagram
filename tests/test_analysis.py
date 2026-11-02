@@ -1,4 +1,5 @@
 import base64
+import csv
 import hashlib
 import io
 import json
@@ -56,6 +57,30 @@ def test_matches_original_baseline(tmp_path):
     assert actual["plotted"] == 7
     assert Image.open(io.BytesIO(base64.b64decode(actual["png"]))).size == (1600, 1800)
     assert len(actual["csv"].splitlines()) == actual["plotted"] + 1
+
+
+def test_csv_exports_the_plotted_fluxes_colors_and_magnitudes():
+    """The added CSV adapter must preserve the scientific values in the plot."""
+    result = analyze(as_fits(synthetic()))
+    rows = list(csv.DictReader(io.StringIO(result["csv"])))
+    assert len(rows) == result["plotted"]
+    green_flux = np.array([float(row["G_flux"]) for row in rows])
+    blue_flux = np.array([float(row["B_flux"]) for row in rows])
+    assert all(float(row["R_flux"]) > 0 for row in rows)
+    assert (green_flux > 0).all() and (blue_flux > 0).all()
+    np.testing.assert_allclose(
+        -2.5 * np.log10(blue_flux) + 2.5 * np.log10(green_flux),
+        result["color"],
+        rtol=1e-12,
+        atol=1e-12,
+    )
+    np.testing.assert_allclose(
+        [float(row["instrumental_B_minus_G"]) for row in rows], result["color"]
+    )
+    np.testing.assert_allclose(
+        [float(row["shifted_instrumental_G"]) for row in rows], result["magnitude"]
+    )
+    assert {float(row["aperture_radius"]) for row in rows} <= {3, 4, 5}
 
 
 @pytest.mark.parametrize(
