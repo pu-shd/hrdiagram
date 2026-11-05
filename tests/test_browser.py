@@ -325,3 +325,30 @@ def test_header_has_no_lab_prototype_label(static_url):
         assert "astronomy lab" not in header.lower()
         assert page.locator(".eyebrow").count() == 0
         browser.close()
+
+
+def test_page_points_to_the_stackimages_hr_diagram(static_url):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        context = browser.new_context()
+        context.route(
+            "**/worker.js*",
+            lambda route: route.fulfill(
+                content_type="application/javascript", body="self.postMessage({type:'ready'});"
+            ),
+        )
+        page = context.new_page()
+        page.goto(static_url)
+        section = page.locator("#stackimages")
+        assert section.is_visible()
+        link = section.locator("a", has_text="HR Diagram of Your Own Image")
+        assert (
+            link.get_attribute("href")
+            == "https://princetonuniversity.github.io/StackImages/HRDiagram/"
+        )
+        text = section.inner_text()
+        for phrase in ("B − R", "B − G", "StackImages desktop app"):
+            assert phrase in text, phrase
+        rows = section.locator("table tbody tr")
+        assert rows.count() >= 4
+        browser.close()

@@ -31,3 +31,15 @@ summary { cursor: pointer; }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
 [hidden] { display: none !important; }
 @media (max-width: 600px) { main { padding: 28px 16px; } .panel { padding: 20px; } }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-top: 1px solid #d7e1ea; }
+thead th { border-top: 0; color: #536b82; font-weight: 600; }
+tbody th { white-space: nowrap; }
+@media (max-width: 600px) {
+  thead { display: none; }
+  table, tbody, tr, th, td { display: block; }
+  tbody th { padding: 12px 0 4px; }
+  td { border-top: 0; padding: 2px 0; }
+  td::before { content: attr(data-label) ": "; font-weight: 600; color: #536b82; }
+}
