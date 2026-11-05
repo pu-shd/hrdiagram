@@ -23,7 +23,7 @@ magnitude. They are not calibrated temperature or absolute magnitude. See
 
 The image-size note shows the selected FITS file's size and, when its primary RGB
 header can be read, its dimensions and the size of the floating-point RGB array
-alone. It flags files over 160 MiB or images over 12 megapixels before processing.
+alone. It flags files over 250 MiB or images over 19 megapixels before processing.
 Browser-reported device RAM is approximate installed memory; Safari and Firefox
 do not expose that report. The page cannot determine free memory or guarantee
 that an image below the limits will fit. Additional processing arrays and tools

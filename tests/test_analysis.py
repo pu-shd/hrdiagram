@@ -128,10 +128,30 @@ def test_course_image_matches_original_baseline():
         assert digest == expected["rounded_six_decimal_sha256"][key]
 
 
+def test_browser_limits_are_250_mib_and_19_megapixels():
+    import analysis
+
+    assert analysis.MAX_FILE_BYTES == 250 * 1024**2
+    assert analysis.MAX_PIXELS == 19_000_000
+
+
 def test_large_dimensions_rejected_before_conversion(monkeypatch):
-    monkeypatch.setattr("analysis.MAX_PIXELS", 100)
-    with pytest.raises(ValueError, match="12 megapixels"):
+    monkeypatch.setattr("analysis.MAX_PIXELS", 160 * 160 - 1)
+    with pytest.raises(ValueError, match="19 megapixels"):
         analyze(as_fits(synthetic()))
+
+
+def test_image_exactly_at_pixel_limit_is_accepted(monkeypatch):
+    monkeypatch.setattr("analysis.MAX_PIXELS", 160 * 160)
+    assert analyze(as_fits(synthetic()))["width"] == 160
+
+
+def test_bytes_over_file_limit_rejected(monkeypatch):
+    from analysis import analyze_bytes
+
+    monkeypatch.setattr("analysis.MAX_FILE_BYTES", 10)
+    with pytest.raises(ValueError, match="250 MiB"):
+        analyze_bytes(b"x" * 11)
 
 
 def test_no_image_has_explanation():

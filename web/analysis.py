@@ -37,8 +37,8 @@ from astropy.io import fits
 from scipy.ndimage import gaussian_filter, maximum_filter
 
 # Added browser guardrails, separate from the inherited photometry settings.
-MAX_FILE_BYTES = 160 * 1024 * 1024
-MAX_PIXELS = 12_000_000
+MAX_FILE_BYTES = 250 * 1024 * 1024
+MAX_PIXELS = 19_000_000
 
 
 def analyze(source: Any) -> dict[str, Any]:
@@ -66,7 +66,7 @@ def analyze(source: Any) -> dict[str, Any]:
             if min(height, width) < 27:
                 raise ValueError("The image is too small for the background annulus.")
             if height * width > MAX_PIXELS:
-                raise ValueError("This browser prototype supports images up to 12 megapixels.")
+                raise ValueError("This browser prototype supports images up to 19 megapixels.")
             data = image.data.astype(float)
     except ValueError:
         raise
@@ -241,5 +241,5 @@ def analyze_bytes(raw: bytes) -> str:
     the worker. This helper makes the limit available to other byte-based callers.
     """
     if len(raw) > MAX_FILE_BYTES:
-        raise ValueError("Choose a FITS file smaller than 160 MiB.")
+        raise ValueError("Choose a FITS file no larger than 250 MiB.")
     return json.dumps(analyze(io.BytesIO(raw)), allow_nan=False)

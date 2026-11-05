@@ -16,8 +16,8 @@
   const loadDetails = element("load-details");
   const imageResources = element("image-resources");
   const resourceNote = /** @type {HTMLDetailsElement} */ (element("resource-note"));
-  const maxFileBytes = 160 * 1024 * 1024;
-  const maxPixels = 12_000_000;
+  const maxFileBytes = 250 * 1024 * 1024;
+  const maxPixels = 19_000_000;
   let checkingImage = false;
   let imageWithinLimits = false;
   let selectionVersion = 0;
@@ -74,7 +74,7 @@
     }
     const fileSize = `${mib(file.size)} MiB file`;
     if (file.size > maxFileBytes) {
-      imageResources.textContent = `${fileSize}. Exceeds the 160-MiB file limit.`;
+      imageResources.textContent = `${fileSize}. Exceeds the 250-MiB file limit.`;
       imageResources.classList.add("over-limit");
       resourceNote.open = true;
       update();
@@ -97,7 +97,7 @@
         imageWithinLimits = pixels <= maxPixels;
         imageResources.textContent = imageWithinLimits
           ? `${description} RGB array alone: ${mib(pixels * 3 * 8)} MiB; processing needs additional memory.`
-          : `${description} Exceeds the 12-megapixel limit.`;
+          : `${description} Exceeds the 19-megapixel limit.`;
         imageResources.classList.toggle("over-limit", !imageWithinLimits);
         if (!imageWithinLimits) resourceNote.open = true;
       } else {
@@ -195,7 +195,7 @@
     clearResults();
     error.hidden = true;
     if (file.size > maxFileBytes) {
-      fail("Choose a FITS file smaller than 160 MiB.");
+      fail("Choose a FITS file no larger than 250 MiB.");
       return;
     }
     busy = true;

@@ -202,8 +202,8 @@ def test_image_over_pixel_limit_is_explained_before_processing(static_url):
         ("SIMPLE", True),
         ("BITPIX", -32),
         ("NAXIS", 3),
-        ("NAXIS1", 4000),
-        ("NAXIS2", 4000),
+        ("NAXIS1", 5000),
+        ("NAXIS2", 3801),
         ("NAXIS3", 3),
     ):
         header[key] = value
@@ -229,16 +229,60 @@ def test_image_over_pixel_limit_is_explained_before_processing(static_url):
         page.wait_for_function(
             'document.querySelector("#image-resources").textContent.includes("Exceeds")'
         )
-        assert "12-megapixel limit" in page.locator("#image-resources").inner_text()
+        assert "19-megapixel limit" in page.locator("#image-resources").inner_text()
         assert page.locator("#resource-note").get_attribute("open") is not None
         assert page.locator("#generate").is_disabled()
+        browser.close()
+
+
+def test_images_at_limits_are_accepted_before_processing(static_url, tmp_path):
+    header = fits.Header()
+    for key, value in (
+        ("SIMPLE", True),
+        ("BITPIX", -32),
+        ("NAXIS", 3),
+        ("NAXIS1", 5000),
+        ("NAXIS2", 3800),
+        ("NAXIS3", 3),
+    ):
+        header[key] = value
+    at_pixel_limit = tmp_path / "at-pixel-limit.fit"
+    at_pixel_limit.write_bytes(header.tostring().encode("ascii"))
+    at_file_limit = tmp_path / "at-file-limit.fit"
+    with at_file_limit.open("wb") as output:
+        output.truncate(250 * 1024**2)
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        context = browser.new_context(locale="en-US")
+        context.route(
+            "**/worker.js*",
+            lambda route: route.fulfill(
+                content_type="application/javascript", body="self.postMessage({type:'ready'});"
+            ),
+        )
+        page = context.new_page()
+        page.goto(static_url)
+        page.locator("#image").set_input_files(at_pixel_limit)
+        page.wait_for_function(
+            'document.querySelector("#image-resources").textContent.includes("19 megapixels")'
+        )
+        note = page.locator("#image-resources").text_content() or ""
+        assert "5,000 × 3,800 pixels (19 megapixels)" in note
+        assert "Exceeds" not in note
+        assert page.locator("#generate").is_enabled()
+        page.locator("#image").set_input_files(at_file_limit)
+        page.wait_for_function(
+            'document.querySelector("#image-resources").textContent.includes("checked during")'
+        )
+        assert "250 MiB file" in (page.locator("#image-resources").text_content() or "")
+        assert page.locator("#generate").is_enabled()
         browser.close()
 
 
 def test_image_over_file_limit_is_rejected_without_reading_image_data(static_url, tmp_path):
     image = tmp_path / "large.fit"
     with image.open("wb") as output:
-        output.truncate(161 * 1024**2)
+        output.truncate(251 * 1024**2)
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         context = browser.new_context()
@@ -256,7 +300,7 @@ def test_image_over_file_limit_is_rejected_without_reading_image_data(static_url
         page.on("pageerror", lambda error: failures.append(str(error)))
         page.goto(static_url)
         page.locator("#image").set_input_files(image)
-        assert "160-MiB file limit" in page.locator("#image-resources").inner_text()
+        assert "250-MiB file limit" in page.locator("#image-resources").inner_text()
         assert page.locator("#resource-note").get_attribute("open") is not None
         assert page.locator("#generate").is_disabled()
         assert not failures

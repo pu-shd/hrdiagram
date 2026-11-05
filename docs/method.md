@@ -10,8 +10,8 @@ standard photometric color index.
 - FITS image with axes `(3, height, width)`, ordered red, green, blue.
 - Linear pixel values: a temporary display autostretch is compatible, while
   saving a nonlinear stretch changes the measurements.
-- At least 27 pixels in each spatial dimension; prototype limits are 12 million
-  spatial pixels and 160 MiB per file.
+- At least 27 pixels in each spatial dimension; prototype limits are 19 million
+  spatial pixels and 250 MiB per file.
 - Finite pixel values. Missing/infinite pixels produce an explanatory error.
 
 The prototype reads the first image HDU containing data. It does not debayer
