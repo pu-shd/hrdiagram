@@ -17,6 +17,8 @@ baseline preserve regression coverage without publishing that script or image.
 
 `./scripts/test.sh` on macOS runs all checks with `docker-compose`. On Linux,
 the equivalent individual commands appear in `.github/workflows/checks.yml`.
+That workflow runs on pushes and pull requests, except those changing only
+Markdown, and can be started by hand.
 The test image includes matching Playwright browser binaries and Python library
 versions from `requirements.lock`. JavaScript tools use `package-lock.json`.
 
@@ -40,7 +42,8 @@ color and magnitude values to native Python with absolute/relative tolerance
 reports are written to ignored `artifacts/` paths.
 
 Publisher tests mock Git and GitHub, including repository creation, safe reruns,
-excluded files, wrong origins, failed Checks, and deployment-run selection. They
+excluded files, wrong origins, failed Checks, Checks started by hand for a
+Markdown-only commit, and deployment-run selection. They
 create no external resources. The macOS preview launcher tests run in local zsh;
 the container reports those checks as skipped when zsh is unavailable.
 

@@ -5,9 +5,20 @@ instrumental color–magnitude diagram, and download its plot and measurements.
 The analysis runs on the student's computer, inside the browser using Pyodide.
 Students do not need to install Python. Hosting requires only static files.
 
-The photometry workflow follows the course script provided by Robert J. Vanderbei.
-His original `HRdiagram.py` and the supplied course FITS/PNG files are excluded
-from this repository and all deployment artifacts.
+The photometry workflow follows the `HRdiagram.py` script supplied by Robert J.
+Vanderbei. That script and the supplied course FITS/PNG files are excluded from
+this repository and all deployment artifacts.
+
+## Related: the StackImages HR diagram
+
+Bob's own HR diagram, from his StackImages desktop app (`makeHRdiag_new` in
+`ass.py`), now also runs in the browser:
+[HR Diagram of Your Own Image](https://princetonuniversity.github.io/StackImages/HRDiagram/)
+([source](https://github.com/PrincetonUniversity/StackImages)). It is tested to
+give the same diagrams as the desktop app, uses a B − R color index, and finds
+and measures stars differently from this page, so the same image gives a
+different diagram. This page links to it from a collapsed **Also available**
+section at the top, which includes a short comparison table.
 
 ## Use
 
@@ -70,8 +81,9 @@ works with network access blocked after initialization and compare CSV values
 with native Python. A local optional instructor-image regression is documented
 in [development and validation](docs/development.md).
 
-GitHub Actions runs the same checks on pushes and pull requests. The deployment
-workflow also requires them to pass before publishing.
+GitHub Actions runs the same checks on pushes and pull requests, except those
+that change only Markdown files (this README, `docs/`), which have nothing to
+check. The deployment workflow runs them again before publishing.
 
 ## Deploy to GitHub Pages
 

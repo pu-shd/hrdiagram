@@ -38,7 +38,7 @@ Run the following commands in your own macOS terminal, where `gh` is already
 authenticated. Your account needs permission to create public repositories in
 `pu-shd`, configure Pages, and run Actions.
 
-From `/Users/bino/Downloads/frs`, optionally run the full local check first:
+From the project directory, optionally run the full local check first:
 
 ```sh
 ./scripts/test.sh
@@ -48,7 +48,6 @@ Initialize Git and stage the explicit source-file list. Bob's original
 `HRdiagram.py` and all FITS/diagram samples are ignored and omitted:
 
 ```sh
-cd /Users/bino/Downloads/frs
 git init -b main
 git add .github .gitignore .dockerignore compose.yaml nginx.conf Dockerfile Dockerfile.tests \
   LICENSE.md README.md docs example.env package.json package-lock.json \
@@ -113,6 +112,13 @@ Repeat in Safari on a supported Mac before classroom distribution.
 Commit and push focused changes, check the **Checks** workflow, and manually run
 `pages.yml` again. Deployment is intentionally manual; a push alone does not
 publish. Each deployment runs its own checks before publishing.
+
+Changes to Markdown files alone (`README.md`, `docs/`) start no workflow: Checks
+ignores them, and they are not part of the site, so there is nothing to deploy.
+To run Checks on such a commit anyway, use **Actions → Checks → Run workflow**
+(`gh workflow run checks.yml --repo pu-shd/hrdiagram --ref main`). The
+publishing automation does this itself when the commit it deploys changed only
+Markdown.
 
 To roll back, revert the relevant source commit, push, and deploy the resulting
 revision through the same workflow. Avoid force-pushing shared history.
