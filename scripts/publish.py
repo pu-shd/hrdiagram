@@ -116,7 +116,7 @@ class Publisher:
             f"GitHub API request failed: {path}. Check connectivity and permissions."
         )
 
-    def run_ids(self, workflow: str, sha: str) -> list[int]:
+    def run_ids(self, workflow: str, sha: str, event: str | None = None) -> list[int]:
         result = self.command(
             "gh",
             "run",
@@ -130,7 +130,7 @@ class Publisher:
             "--branch",
             "main",
             "--event",
-            "push" if workflow == "checks.yml" else "workflow_dispatch",
+            event or ("push" if workflow == "checks.yml" else "workflow_dispatch"),
             "--limit",
             "30",
             "--json",
@@ -147,14 +147,35 @@ class Publisher:
             raise PublishError(f"Could not list {workflow} runs; check GitHub Actions permissions.")
         return [int(run["databaseId"]) for run in json.loads(result.stdout)]
 
-    def await_run(self, workflow: str, sha: str, exclude: set[int] | None = None) -> int:
-        deadline = time.monotonic() + 120
+    def await_run(
+        self,
+        workflow: str,
+        sha: str,
+        exclude: set[int] | None = None,
+        event: str | None = None,
+        timeout: float = 120,
+    ) -> int:
+        deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
-            runs = [run for run in self.run_ids(workflow, sha) if run not in (exclude or set())]
+            runs = [
+                run for run in self.run_ids(workflow, sha, event) if run not in (exclude or set())
+            ]
             if runs:
                 return runs[0]
             time.sleep(3)
         raise PublishError(f"No {workflow} run appeared. Check repository Actions settings.")
+
+    def await_checks(self, sha: str) -> int:
+        """Checks run on push, except when the push changed only Markdown; then start them."""
+        try:
+            return self.await_run("checks.yml", sha, timeout=30)
+        except PublishError:
+            pass
+        previous = set(self.run_ids("checks.yml", sha, "workflow_dispatch"))
+        self.command(
+            "gh", "workflow", "run", "checks.yml", "--repo", self.repository, "--ref", "main"
+        )
+        return self.await_run("checks.yml", sha, previous, "workflow_dispatch")
 
     def watch(self, run_id: int) -> None:
         result = self.command(
@@ -244,7 +265,7 @@ class Publisher:
             self.command(*creation)
         self.command("git", "push", "--set-upstream", "origin", "main")
         sha = self.command("git", "rev-parse", "HEAD", quiet=True).stdout.strip()
-        self.watch(self.await_run("checks.yml", sha))
+        self.watch(self.await_checks(sha))
         pages_path = f"repos/{self.repository}/pages"
         pages = self.api(pages_path)
         if pages is None or pages.get("build_type") != "workflow":

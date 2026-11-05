@@ -1,7 +1,12 @@
 name: Checks
 on:
+  # Markdown alone (README.md, docs/) has nothing to check; scripts/publish.py starts this
+  # by hand when the commit it deploys changed only Markdown.
   push:
+    paths-ignore: ["**.md"]
   pull_request:
+    paths-ignore: ["**.md"]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

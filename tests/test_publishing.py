@@ -16,7 +16,15 @@ spec.loader.exec_module(publish_app)
 
 
 class GitHubModel:
-    def __init__(self, root, existing=False, fail_checks=False, unsafe=False, wrong_origin=False):
+    def __init__(
+        self,
+        root,
+        existing=False,
+        fail_checks=False,
+        unsafe=False,
+        wrong_origin=False,
+        docs_only=False,
+    ):
         self.root = root
         self.existing = existing
         self.fail_checks = fail_checks
@@ -24,6 +32,8 @@ class GitHubModel:
         self.wrong_origin = wrong_origin
         self.commands = []
         self.dispatched = False
+        self.docs_only = docs_only  # HEAD changes only Markdown: Checks don't run on its push
+        self.checks_dispatched = False
         self.pages = False
         self.sha = "a" * 40
 
@@ -59,6 +69,11 @@ class GitHubModel:
             out = self.sha
         elif args[:3] == ("gh", "run", "list"):
             workflow = args[args.index("--workflow") + 1]
+            event = args[args.index("--event") + 1]
+            if workflow == "checks.yml" and self.docs_only:
+                manual = event == "workflow_dispatch" and self.checks_dispatched
+                out = json.dumps([{"databaseId": 101}] if manual else [])
+                return subprocess.CompletedProcess(args, code, out, err)
             out = json.dumps(
                 [{"databaseId": 100}]
                 if workflow == "checks.yml"
@@ -70,6 +85,8 @@ class GitHubModel:
             code = 1
         elif args[:4] == ("gh", "workflow", "run", "pages.yml"):
             self.dispatched = True
+        elif args[:4] == ("gh", "workflow", "run", "checks.yml"):
+            self.checks_dispatched = True
         elif args == ("gh", "api", "repos/pu-shd/hrdiagram/pages"):
             if self.pages:
                 out = json.dumps(
@@ -109,6 +126,30 @@ def test_creates_public_repo_and_waits_for_checks_before_deploying(tmp_path, mon
     )
     assert commands.index(checks) < commands.index(dispatch) < commands.index(deployment)
     assert verified == ["https://pu-shd.github.io/hrdiagram/"]
+
+
+def test_starts_checks_by_hand_when_the_push_only_changed_markdown(tmp_path, monkeypatch):
+    """checks.yml ignores Markdown-only pushes; publishing must still check before deploying."""
+    clock = [0.0]
+    monkeypatch.setattr(publish_app.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(
+        publish_app.time, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + seconds)
+    )
+    publisher, model, verified = setup_publisher(
+        tmp_path, monkeypatch, existing=True, docs_only=True
+    )
+    publisher.publish()
+    commands = model.commands
+    start = commands.index(
+        ("gh", "workflow", "run", "checks.yml", "--repo", "pu-shd/hrdiagram", "--ref", "main")
+    )
+    checks = next(command for command in commands if command[:4] == ("gh", "run", "watch", "101"))
+    deploy = next(
+        command for command in commands if command[:4] == ("gh", "workflow", "run", "pages.yml")
+    )
+    assert start < commands.index(checks) < commands.index(deploy)
+    assert clock[0] < 120  # gave up waiting for a push run well before the old two minutes
+    assert verified
 
 
 def test_failed_checks_stop_deployment_and_show_logs(tmp_path, monkeypatch):
