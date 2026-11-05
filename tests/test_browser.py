@@ -341,6 +341,14 @@ def test_page_points_to_the_stackimages_hr_diagram(static_url):
         page.goto(static_url)
         section = page.locator("#stackimages")
         assert section.is_visible()
+        disclosure = section.locator("details")
+        summary = disclosure.locator("summary")
+        assert summary.inner_text().strip() == "Also available: the StackImages HR diagram"
+        assert disclosure.get_attribute("open") is None  # collapsed by default
+        assert section.locator("table").is_hidden()
+        summary.click()
+        assert disclosure.get_attribute("open") is not None
+        assert section.locator("table").is_visible()
         link = section.locator("a", has_text="HR Diagram of Your Own Image")
         assert (
             link.get_attribute("href")

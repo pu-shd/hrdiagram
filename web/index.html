@@ -6,8 +6,8 @@
   <meta name="color-scheme" content="light dark">
   <title>Stellar color–magnitude diagram</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=20261105b">
-  <script src="app.js?v=20261105b" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261105c">
+  <script src="app.js?v=20261105c" defer></script>
 </head>
 <body>
   <main>
@@ -16,32 +16,34 @@
       <p class="intro">Turn a color FITS image into an instrumental color–magnitude diagram.</p>
     </header>
     <section id="stackimages" class="panel" aria-labelledby="stackimages-heading">
-      <h2 id="stackimages-heading">Also available: the StackImages HR diagram</h2>
-      <p><a href="https://princetonuniversity.github.io/StackImages/HRDiagram/">HR Diagram of Your Own Image</a>
-        runs the HR diagram from Robert Vanderbei’s StackImages desktop app in the browser, with the same
-        results as the desktop app. Both pages read your FITS image on your own computer. They measure
-        stars differently, so the same image gives different diagrams:</p>
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr><th scope="col"></th><th scope="col">This page</th><th scope="col">StackImages HR Diagram</th></tr>
-          </thead>
-          <tbody>
-            <tr><th scope="row">Based on</th><td data-label="This page">A short classroom script (HRdiagram.py)</td>
-              <td data-label="StackImages">The StackImages desktop app, tested to give identical diagrams</td></tr>
-            <tr><th scope="row">Color index</th><td data-label="This page">B − G</td><td data-label="StackImages">B − R, a wider color range</td></tr>
-            <tr><th scope="row">Finding stars</th><td data-label="This page">Peaks 5σ above the background</td>
-              <td data-label="StackImages">Peaks that are star-shaped; drops blended, saturated and hot-pixel detections by their width</td></tr>
-            <tr><th scope="row">Measuring</th><td data-label="This page">3–5 pixel apertures with a 7–10 pixel sky ring</td>
-              <td data-label="StackImages">2.5-pixel aperture with a 2.5–4 pixel sky ring, suited to crowded clusters</td></tr>
-            <tr><th scope="row">On the page</th><td data-label="This page">The diagram and a CSV of measured stars</td>
-              <td data-label="StackImages">The picture with brightness sliders, brightest and faintest magnitude settings, the HR and
-                color diagrams, and CSV of plotted stars</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="hint">For dense globular clusters such as M2 or M13, the StackImages version usually gives
-        a cleaner diagram. Its first diagram of a large image can take a minute.</p>
+      <details>
+        <summary><h2 id="stackimages-heading">Also available: the StackImages HR diagram</h2></summary>
+        <p><a href="https://princetonuniversity.github.io/StackImages/HRDiagram/">HR Diagram of Your Own Image</a>
+          runs the HR diagram from Robert Vanderbei’s StackImages desktop app in the browser, with the same
+          results as the desktop app. Both pages read your FITS image on your own computer. They measure
+          stars differently, so the same image gives different diagrams:</p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th scope="col"></th><th scope="col">This page</th><th scope="col">StackImages HR Diagram</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Based on</th><td data-label="This page">A short classroom script (HRdiagram.py)</td>
+                <td data-label="StackImages">The StackImages desktop app, tested to give identical diagrams</td></tr>
+              <tr><th scope="row">Color index</th><td data-label="This page">B − G</td><td data-label="StackImages">B − R, a wider color range</td></tr>
+              <tr><th scope="row">Finding stars</th><td data-label="This page">Peaks 5σ above the background</td>
+                <td data-label="StackImages">Peaks that are star-shaped; drops blended, saturated and hot-pixel detections by their width</td></tr>
+              <tr><th scope="row">Measuring</th><td data-label="This page">3–5 pixel apertures with a 7–10 pixel sky ring</td>
+                <td data-label="StackImages">2.5-pixel aperture with a 2.5–4 pixel sky ring, suited to crowded clusters</td></tr>
+              <tr><th scope="row">On the page</th><td data-label="This page">The diagram and a CSV of measured stars</td>
+                <td data-label="StackImages">The picture with brightness sliders, brightest and faintest magnitude settings, the HR and
+                  color diagrams, and CSV of plotted stars</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">For dense globular clusters such as M2 or M13, the StackImages version usually gives
+          a cleaner diagram. Its first diagram of a large image can take a minute.</p>
+      </details>
     </section>
     <section class="panel" aria-labelledby="input-heading">
       <h2 id="input-heading">Choose your image</h2>

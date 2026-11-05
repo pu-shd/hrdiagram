@@ -43,3 +43,5 @@ tbody th { white-space: nowrap; }
   td { border-top: 0; padding: 2px 0; }
   td::before { content: attr(data-label) ": "; font-weight: 600; color: #536b82; }
 }
+#stackimages details { margin-top: 0; }
+#stackimages summary h2 { display: inline; margin: 0; font-size: 1.25rem; }
