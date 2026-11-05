@@ -305,3 +305,23 @@ def test_image_over_file_limit_is_rejected_without_reading_image_data(static_url
         assert page.locator("#generate").is_disabled()
         assert not failures
         browser.close()
+
+
+def test_header_has_no_lab_prototype_label(static_url):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        context = browser.new_context()
+        context.route(
+            "**/worker.js*",
+            lambda route: route.fulfill(
+                content_type="application/javascript", body="self.postMessage({type:'ready'});"
+            ),
+        )
+        page = context.new_page()
+        page.goto(static_url)
+        header = page.locator("main > header").inner_text()
+        assert "Find the pattern in the stars." in header
+        assert "prototype" not in header.lower()
+        assert "astronomy lab" not in header.lower()
+        assert page.locator(".eyebrow").count() == 0
+        browser.close()
